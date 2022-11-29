@@ -8,7 +8,7 @@ function maxOpticalFlowCoords = farneback()
     height=source.H;
     width=source.W;
     framenum=source.NumberOfFrames;
-    start_frame=59;               %read from 59th frame, can be changed to other 
+    start_frame=129;               %read from 59th frame, can be changed to other 
     fr=read(source,start_frame);            
     I=fr;
     lengthfile=framenum-start_frame;  
@@ -50,6 +50,22 @@ function maxOpticalFlowCoords = farneback()
         % If the optical flow is the greatest recorded so far
         if maxElement > maxOpticalFlow 
             maxOpticalFlow = maxElement;
+            % Below is some code I experimented with to find the average
+            % position of the flow in the local neighbourhood, but it
+            % doesn't seem to work. I think we need to use RANSAC on the
+            % edge detection to find a circle close to the max optical flow
+%             totalFlow = 0;
+%             middleOfObject = [0 0];
+%             for i = max(colIndex-20,1):2:min(colIndex+20, height)
+%                 for j = max(rowIndex-20,1):2:min(rowIndex+20, width)
+%                     totalFlow = totalFlow + flow.Magnitude(i, j);
+%                     middleOfObject = [middleOfObject(1)+i*flow.Magnitude(i,j), middleOfObject(2)+j*flow.Magnitude(i,j)];
+%                 end
+%             end
+%             totalFlow
+%             orig = [colIndex, rowIndex]
+%             middleOfObject = middleOfObject/totalFlow
+%             maxOpticalFlowCoords = [middleOfObject(1), middleOfObject(2), l+start_frame];
             maxOpticalFlowCoords = [colIndex, rowIndex, l+start_frame];
             isConfirmedValid = false;
         % If we confirm that the previously recorded max optical flow is valid
@@ -81,7 +97,7 @@ function maxOpticalFlowCoords = farneback()
         hold on
         plot(maxOpticalFlowCoords(1),maxOpticalFlowCoords(2), 'ro', 'MarkerSize', 10, 'LineWidth', 1);
     end
-end
+
 
 % % Edge Detector Code
 %     BW1 = edge(Im,'Canny', [0.3]);
