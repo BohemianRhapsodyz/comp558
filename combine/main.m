@@ -1,24 +1,41 @@
 clear all;
 close all;
 clc
-earliest_frame=65;
-start_frame=120;               %read from 89th frame, can be changed to other 
-box_x=20; %interest_region box size
-box_y=20;
+% earliest_frame=65;
+% start_frame=120;               %read from 89th frame, can be changed to other 
+% box_x=20; %interest_region box size
+% box_y=20;
+% for second video
+earliest_frame=60;
+start_frame=61;
+end_frame=70;
+box_x=30; %interest_region box size
+box_y=30;
+% %for pink pig
+% earliest_frame=1;
+% start_frame=26;
+% end_frame=30;
+% box_x=90; %interest_region box size
+% box_y=90;
+
 %% farneback
 % Returns [y coordinate, x coordinate, frame number]
 
 
     willPlot = true;
     
-    fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
+%     fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
+    fileName = 'Animation Reference Footage VolleyBall Drop (reference).mp4'
+% fileName = 'Peppa_Pig_Ball_Animation.mp4'
+
+
     source=VideoReader(fileName);
     height=source.H;
     width=source.W;
     framenum=source.NumberOfFrames;
     fr=read(source,start_frame);            
     I=fr;
-    lengthfile=framenum-start_frame;  
+    lengthfile=end_frame-start_frame;  
     
     % The parameters at the end are super important. Otherwise, it's too noisy
     opticFlow = opticalFlowFarneback("NeighborhoodSize",16, "FilterSize", 40);
@@ -107,7 +124,9 @@ box_y=20;
 %% meanshift
 
 
-fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
+% fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
+fileName = 'Animation Reference Footage VolleyBall Drop (reference).mp4';
+% fileName = 'Peppa_Pig_Ball_Animation.mp4';
 source=VideoReader(fileName);
 height=source.H;
 width=source.W;
