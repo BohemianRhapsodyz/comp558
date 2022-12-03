@@ -56,8 +56,20 @@ box_y=20;
         
         % If the optical flow is the greatest recorded so far
         if maxElement > maxOpticalFlow 
-            maxOpticalFlow = maxElement;
-            maxOpticalFlowCoords = [colIndex, rowIndex, l+start_frame];
+           maxOpticalFlow = maxElement;
+            % Search the local neighbourhood to calculate the average
+            % position of the flow
+            totalFlow = 0;
+            middleOfObject = [0 0];
+            flowMag = flow.Magnitude;
+            for i = max(colIndex-40,1):1:min(colIndex+40, width)
+                for j = max(rowIndex-40,1):1:min(rowIndex+40, height)
+                    totalFlow = totalFlow + flowMag(j,i);
+                    middleOfObject = [middleOfObject(1)+i*flowMag(j,i), middleOfObject(2)+j*flowMag(j,i)];
+                end
+            end
+            middleOfObject = middleOfObject/totalFlow;
+            maxOpticalFlowCoords = [middleOfObject(1), middleOfObject(2), l+start_frame];
             isConfirmedValid = false;
         % If we confirm that the previously recorded max optical flow is valid
         elseif isConfirmedValid == false && abs(maxElement-maxOpticalFlow) < opticalFlowThreshold

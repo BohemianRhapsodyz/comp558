@@ -8,8 +8,8 @@ function maxOpticalFlowCoords = farneback()
     height=source.H;
     width=source.W;
     framenum=source.NumberOfFrames;
-    start_frame=152;               %read from 59th frame, can be changed to other 
-    end_frame = 158; % framenum;
+    start_frame=140;               %read from 59th frame, can be changed to other 
+    end_frame = 145; % framenum;
     fr=read(source,start_frame);            
     I=fr;
     lengthfile=end_frame-start_frame;  
@@ -62,7 +62,7 @@ function maxOpticalFlowCoords = farneback()
                     middleOfObject = [middleOfObject(1)+i*flowMag(j,i), middleOfObject(2)+j*flowMag(j,i)];
                 end
             end
-            middleOfObject = middleOfObject/totalFlow
+            middleOfObject = middleOfObject/totalFlow;
             maxOpticalFlowCoords = [middleOfObject(1), middleOfObject(2), l+start_frame];
             isConfirmedValid = false;
         % If we confirm that the previously recorded max optical flow is valid
