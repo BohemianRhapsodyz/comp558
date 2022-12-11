@@ -1,32 +1,52 @@
 clear all;
 close all;
 clc
-% earliest_frame=65;
-% start_frame=120;               %read from 89th frame, can be changed to other 
-% box_x=20; %interest_region box size
-% box_y=20;
-% for second video
-earliest_frame=60;
-start_frame=61;
-end_frame=70;
+
+% video 1, earpods
+
+fileName = 'vid1_trim.mp4';
+earliest_frame=65;
+start_frame=89;               %read from 89th frame, can be changed to other
+end_frame=120;
+box_x=20; %interest_region box size
+box_y=20;
+
+
+%{
+% video 2, volleyball bouncing
+
+fileName = 'vid2_trim.mp4';
+earliest_frame=1;
+start_frame=2;
+end_frame=20;
 box_x=30; %interest_region box size
 box_y=30;
-% %for pink pig
-% earliest_frame=1;
-% start_frame=26;
-% end_frame=30;
-% box_x=90; %interest_region box size
-% box_y=90;
+
+
+
+% video 3, clear ball boucing
+fileName = 'vid3_trim.mp4';
+earliest_frame=1;
+start_frame=100;
+end_frame=161;
+box_x=90; %interest_region box size
+box_y=90;
+
+
+% video 4, peppa pig
+fileName = 'vid4.mp4'
+earliest_frame=1;
+start_frame=26;
+end_frame=30;
+box_x=90; %interest_region box size
+box_y=90;
+%}
 
 %% farneback
 % Returns [y coordinate, x coordinate, frame number]
 
 
     willPlot = true;
-    
-%     fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
-    fileName = 'Animation Reference Footage VolleyBall Drop (reference).mp4'
-% fileName = 'Peppa_Pig_Ball_Animation.mp4'
 
 
     source=VideoReader(fileName);
@@ -125,7 +145,7 @@ box_y=30;
 
 
 % fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
-fileName = 'Animation Reference Footage VolleyBall Drop (reference).mp4';
+%fileName = 'Animation Reference Footage VolleyBall Drop (reference).mp4';
 % fileName = 'Peppa_Pig_Ball_Animation.mp4';
 source=VideoReader(fileName);
 height=source.H;
@@ -379,3 +399,10 @@ for l=earliest_frame:framenum-1
     plot(ticx_whole(1:i),ticy_whole(1:i),'LineWidth',2,'Color','b');
     i=i+1;
 end
+
+%% RANSAC
+% returns the predicted image coordinates happening next 
+% with length of time being same as the input video
+[xFuture, yFuture] = predictPathRANSAC(v_whole, box_x);
+
+
