@@ -4,7 +4,7 @@ clc
 
 % video 1, earpods
 
- fileName = 'vid1_trim.mp4';
+ fileName = 'Videos/vid1_trim.mp4';
  earliest_frame=65;
  start_frame=90;               %read from 89th frame, can be changed to other
  end_frame=120;
@@ -17,7 +17,7 @@ clc
 %{
 % video 2, volleyball bouncing
 
-fileName = 'vid2_trim.mp4';
+fileName = 'Videos/vid2_trim.mp4';
 earliest_frame=1;
 start_frame=2;
 end_frame=20;
@@ -29,7 +29,7 @@ box_y=30;
 
 
 % video 3, clear ball boucing
-fileName = 'vid3_trim.mp4';
+fileName = 'Videos/vid3_trim.mp4';
 earliest_frame=1;
 start_frame=100;
 end_frame=161;
@@ -40,7 +40,7 @@ box_y=90;
 
 
 % video 4, peppa pig
-fileName = 'vid4.mp4'
+fileName = 'Videos/vid4.mp4'
 earliest_frame=1;
 start_frame=26;
 end_frame=30;
@@ -341,5 +341,3 @@ for i=1:fix(size(xFuture,2)/5) % every 5 frames
 
 end
 imshow(prediction_Im)
-
-
