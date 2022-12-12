@@ -1,15 +1,15 @@
 % Returns [y coordinate, x coordinate, frame number]
-function maxOpticalFlowCoords = farneback()
+function maxOpticalFlowCoords = farneback(filename,start_frame,end_frame)
 
     willPlot = true;
     
-    fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
+    fileName = filename;
     source=VideoReader(fileName);
     height=source.H;
     width=source.W;
     framenum=source.NumberOfFrames;
-    start_frame=140;               %read from 59th frame, can be changed to other 
-    end_frame = 145; % framenum;
+%     start_frame=140;              
+%     end_frame = 145; 
     fr=read(source,start_frame);            
     I=fr;
     lengthfile=end_frame-start_frame;  
@@ -41,7 +41,7 @@ function maxOpticalFlowCoords = farneback()
     
     for l=1:lengthfile
         fr=read(source,l+start_frame);
-        Im=im2gray(fr);
+        Im=rgb2gray(fr);
     
         flow = estimateFlow(opticFlow, Im);
         [maxInColumn, maxInColumnIndex] = max(flow.Magnitude);

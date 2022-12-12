@@ -1,8 +1,8 @@
-function [pixels, pixelShape] = getObjectPixels()
+function pixels = object_pixels(filename,start_frame,end_frame)
 
     movementThreshold = 1;
     
-    fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
+    fileName = filename;
     source=VideoReader(fileName);
     global height
     height=source.H;
@@ -10,7 +10,7 @@ function [pixels, pixelShape] = getObjectPixels()
     width=source.W;
     
     % Get image when the object is moving the fastest
-    maxOpticalFlowCoords = farneback()
+    maxOpticalFlowCoords = farneback(filename,start_frame,end_frame);
     fr=read(source,maxOpticalFlowCoords(3));
     Im=rgb2gray(fr);
     
@@ -52,8 +52,7 @@ function [pixels, pixelShape] = getObjectPixels()
     % Create pixelBinary, which indicates the shape of the object by
     % recursively "filling" the area surrounded by the object's edges
     function recursiveFill(y,x)
-        global pixelBinary;
-        global edges;
+
         for k = 1:4
             if k == 1
                 first = y+1;
@@ -78,7 +77,7 @@ function [pixels, pixelShape] = getObjectPixels()
     
     % Crop pixelBinary so it's only the shape of the object
     function [yOffset, xOffset] = cropImage()
-        global pixelBinary
+
         yOffset = 0;
         xOffset = 0;
         while(max(pixelBinary(:,end)) == 0)
@@ -99,7 +98,7 @@ function [pixels, pixelShape] = getObjectPixels()
     
     % Clever function that removes any lines in the shape
     function removeLines()
-        global pixelBinary
+
         for i = 1:size(pixelBinary,1)
             if max(pixelBinary(i,:) > 0)
                 startIndex = 1;
@@ -134,3 +133,4 @@ function [pixels, pixelShape] = getObjectPixels()
             end
         end
     end
+end

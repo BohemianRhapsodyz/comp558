@@ -4,12 +4,14 @@ clc
 
 % video 1, earpods
 
-fileName = 'vid1_trim.mp4';
-earliest_frame=65;
-start_frame=89;               %read from 89th frame, can be changed to other
-end_frame=120;
-box_x=20; %interest_region box size
-box_y=20;
+ fileName = 'vid1_trim.mp4';
+ earliest_frame=65;
+ start_frame=90;               %read from 89th frame, can be changed to other
+ end_frame=120;
+ frame_for_canny_start=110;
+ frame_for_canny_end=115;
+ box_x=20; %interest_region box size
+ box_y=20;
 
 
 %{
@@ -19,6 +21,8 @@ fileName = 'vid2_trim.mp4';
 earliest_frame=1;
 start_frame=2;
 end_frame=20;
+frame_for_canny_start=140;
+frame_for_canny_end=145;
 box_x=30; %interest_region box size
 box_y=30;
 
@@ -29,6 +33,8 @@ fileName = 'vid3_trim.mp4';
 earliest_frame=1;
 start_frame=100;
 end_frame=161;
+frame_for_canny_start=140;
+frame_for_canny_end=145;
 box_x=90; %interest_region box size
 box_y=90;
 
@@ -38,124 +44,26 @@ fileName = 'vid4.mp4'
 earliest_frame=1;
 start_frame=26;
 end_frame=30;
+frame_for_canny_start=140;
+frame_for_canny_end=145;
 box_x=90; %interest_region box size
 box_y=90;
 %}
 
 %% farneback
 % Returns [y coordinate, x coordinate, frame number]
+maxOpticalFlowCoords = farneback(fileName,start_frame,end_frame);
 
-
-    willPlot = true;
-
-
-    source=VideoReader(fileName);
-    height=source.H;
-    width=source.W;
-    framenum=source.NumberOfFrames;
-    fr=read(source,start_frame);            
-    I=fr;
-    lengthfile=end_frame-start_frame;  
-    
-    % The parameters at the end are super important. Otherwise, it's too noisy
-    opticFlow = opticalFlowFarneback("NeighborhoodSize",16, "FilterSize", 40);
-    
-    if willPlot
-        h = figure;
-        movegui(h);
-        hViewPanel = uipanel(h,'Position',[0 0 1 1],'Title','Plot of Optical Flow Vectors');
-        hPlot = axes(hViewPanel);
-    end
-    
-    
-    % The following are some variables used to find the maximum optical flow.
-    % Basically, if the maximum optical flow is greater than the previously recorded one,
-    % we're not sure yet whether it's valid. It might be an outlier. On the next frame, we check to see
-    % whether the max optical flow is within 1 of the previous. If it is, then
-    % we know it's a real max optical flow. If it's not, then it's probably an
-    % outlier and we can just get rid of it.
-    
-    isConfirmedValid = false; % Whether the optical flow max is an outlier or not
-    opticalFlowThreshold = 1; % The number to compare for deciding if an outlier
-    prevMaxOpticalFlow = 0;
-    prevMaxOpticalFlowCoords = [1,1,1];
-    maxOpticalFlow = 0;
-    maxOpticalFlowCoords = [1,1,1];
-    
-    for l=1:lengthfile
-        fr=read(source,l+start_frame);
-%         Im=im2gray(fr);
-        Im=rgb2gray(fr);
-        flow = estimateFlow(opticFlow, Im);
-        [maxInColumn, maxInColumnIndex] = max(flow.Magnitude);
-        [maxElement, colIndex] = max(maxInColumn);
-        rowIndex = maxInColumnIndex(colIndex);
-        
-        % If the optical flow is the greatest recorded so far
-        if maxElement > maxOpticalFlow 
-           maxOpticalFlow = maxElement;
-            % Search the local neighbourhood to calculate the average
-            % position of the flow
-            totalFlow = 0;
-            middleOfObject = [0 0];
-            flowMag = flow.Magnitude;
-            for i = max(colIndex-40,1):1:min(colIndex+40, width)
-                for j = max(rowIndex-40,1):1:min(rowIndex+40, height)
-                    totalFlow = totalFlow + flowMag(j,i);
-                    middleOfObject = [middleOfObject(1)+i*flowMag(j,i), middleOfObject(2)+j*flowMag(j,i)];
-                end
-            end
-            middleOfObject = middleOfObject/totalFlow;
-            maxOpticalFlowCoords = [middleOfObject(1), middleOfObject(2), l+start_frame];
-            isConfirmedValid = false;
-        % If we confirm that the previously recorded max optical flow is valid
-        elseif isConfirmedValid == false && abs(maxElement-maxOpticalFlow) < opticalFlowThreshold
-            isConfirmedValid = true;
-            prevMaxOpticalFlow = maxOpticalFlow;
-            prevMaxOpticalFlowCoords = maxOpticalFlowCoords;
-        % If we determine that the previously recorded max optical flow is an outlier
-        elseif isConfirmedValid == false && abs(maxElement-maxOpticalFlow) > opticalFlowThreshold
-            isConfirmedValid = true;
-            maxOpticalFlow = prevMaxOpticalFlow;
-            maxOpticalFlowCoords = prevMaxOpticalFlowCoords;
-        end
-    
-        if willPlot
-            imshow(fr)
-            hold on
-            plot(flow,'DecimationFactor',[5 5],'ScaleFactor',2,'Parent',hPlot);
-            plot(maxOpticalFlowCoords(1),maxOpticalFlowCoords(2), 'ro', 'MarkerSize', 10, 'LineWidth', 1);
-            hold off
-            pause(10^-3)
-        end
-        
-    end
-    
-    if willPlot
-        fr=read(source,maxOpticalFlowCoords(3));
-        imshow(fr)
-        hold on
-        plot(maxOpticalFlowCoords(1),maxOpticalFlowCoords(2), 'ro', 'MarkerSize', 10, 'LineWidth', 1);
-    end
-
-% % Edge Detector Code
-%     BW1 = edge(Im,'Canny', [0.3]);
-%     imshow(BW1);
 %% meanshift
-
-
-% fileName = '315347705_8362364153805063_7853812457404860863_n.mp4';
-%fileName = 'Animation Reference Footage VolleyBall Drop (reference).mp4';
-% fileName = 'Peppa_Pig_Ball_Animation.mp4';
 source=VideoReader(fileName);
 height=source.H;
 width=source.W;
 framenum=source.NumberOfFrames;
 
-start_frame=maxOpticalFlowCoords(3);               %read from 59th frame, can be changed to other (z frmae found by optical flow)
+start_frame=maxOpticalFlowCoords(3);               
 fr=read(source,start_frame);            
 I=fr;
-figure(1);
+figure;
 imshow(I);
 
 x=maxOpticalFlowCoords(1);
@@ -174,7 +82,6 @@ tic_y=rect(2)+rect(4)/2;
 m_wei=zeros(a,b);%weigt matrix
 h=y(1)^2+y(2)^2 ;
 
-
 for i=1:a
     for j=1:b
         dist=(i-y(1))^2+(j-y(2))^2;
@@ -182,8 +89,6 @@ for i=1:a
     end
 end
 C=1/sum(sum(m_wei));%normalization cofficient C
-
-
 
 %Calculate color histogram of target object box: hist1 also fixed
 hist1=zeros(1,4096);
@@ -201,7 +106,6 @@ hist1=hist1*C; %normalize histgoram
 rect(3)=ceil(rect(3));
 rect(4)=ceil(rect(4));
 %% variable to store v1 v2 v3 v4 ticx tic y for the whole process
-% v_whole=zeros(framenum,4);
 ticx_whole_f=tic_x;
 ticy_whole_f=tic_y;
 %% going forwards 
@@ -229,7 +133,7 @@ for l=1:lengthfile
             end
         end
         hist2=hist2*C;
-        figure(2);
+        figure(4);
         subplot(1,2,1);
         plot(hist2);
         hold on;
@@ -270,7 +174,7 @@ for l=1:lengthfile
      %%%display%%%
     subplot(1,2,2);
     imshow(uint8(Im));
-    title('object track result and trajctory');
+    title('forward object track result and trajctory');
     hold on;
     plot([v1,v1+v3],[v2,v2],[v1,v1],[v2,v2+v4],[v1,v1+v3],[v2+v4,v2+v4],[v1+v3,v1+v3],[v2,v2+v4],'LineWidth',2,'Color','r');
     plot(tic_x,tic_y,'LineWidth',2,'Color','b');
@@ -325,7 +229,7 @@ for l=1:(lengthfile-earliest_frame)
             end
         end
         hist2=hist2*C;
-        figure(3);
+        figure(5);
         subplot(1,2,1);
         plot(hist2);
         hold on;
@@ -366,7 +270,7 @@ for l=1:(lengthfile-earliest_frame)
      %%%display%%%
     subplot(1,2,2);
     imshow(uint8(Im));
-    title('object track result and trajctory');
+    title('backward object track result and trajctory');
     hold on;
     plot([v1,v1+v3],[v2,v2],[v1,v1],[v2,v2+v4],[v1,v1+v3],[v2+v4,v2+v4],[v1+v3,v1+v3],[v2,v2+v4],'LineWidth',2,'Color','r');
     plot(tic_x,tic_y,'LineWidth',2,'Color','b');
@@ -376,19 +280,18 @@ for l=1:(lengthfile-earliest_frame)
     ticy_whole_b=[rect(2)+rect(4)/2;ticy_whole_b];
 end
 %% combine back and forward to whole process
-%删除ticy_whole_b最后一行
+
 % ticy_whole_b(end)=[];
 % ticx_whole_b(end)=[];
 ticx_whole=[ticx_whole_b;ticx_whole_f];
 ticy_whole=[ticy_whole_b;ticy_whole_f];
 v_whole=[flipdim(v_whole_b,1);v_whole_f];
 
-%画图
 i=1;
 for l=earliest_frame:framenum-1
     fr=read(source,l);
     Im=fr;    
-    figure(5);
+    figure(6);
     imshow(uint8(Im));
     hold on;
     title('final object track result and trajctory');
@@ -404,5 +307,19 @@ end
 % returns the predicted image coordinates happening next 
 % with length of time being same as the input video
 [xFuture, yFuture] = predictPathRANSAC(v_whole, box_x);
+
+%% edge detection
+pixels = object_pixels(fileName,frame_for_canny_start,frame_for_canny_end);
+
+%% Prediction
+figure(6);
+title('final object track result and prediction trajctory');
+% fr=read(source,1);
+% image(fr);
+hold on;
+for i=1:fix(size(xFuture,2)/5) %every 5 frame
+image([xFuture(5*i),xFuture(5*i)+size(pixels,1)],[yFuture(5*i),yFuture(5*i)+size(pixels,2)],pixels,'CDataMapping', 'scaled');
+hold on;
+end
 
 
