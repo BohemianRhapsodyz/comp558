@@ -1,4 +1,4 @@
-function pixels = object_pixels(filename,start_frame,end_frame)
+function [pixelBinary, pixels] = object_pixels(filename,start_frame,end_frame)
 
     movementThreshold = 1;
     
@@ -35,13 +35,13 @@ function pixels = object_pixels(filename,start_frame,end_frame)
     
     
     global pixelBinary
-    pixelBinary = zeros(height, width);
+    pixelBinary = uint8(zeros(height, width));
     
     % Fill in the shape, crop the sides, remove any lines in the middle of the shape
     recursiveFill(ceil(maxOpticalFlowCoords(2)),ceil(maxOpticalFlowCoords(1)));
     [yOffset, xOffset] = cropImage();
     removeLines();
-    pixels = fr(yOffset:(yOffset+size(pixelBinary,1)),xOffset:(xOffset+size(pixelBinary,2)),:);
+    pixels = fr(yOffset+1:(yOffset+size(pixelBinary,1)),xOffset+1:(xOffset+size(pixelBinary,2)),:);
     
     figure
     imshow(pixelBinary);

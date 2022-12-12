@@ -309,7 +309,7 @@ end
 [xFuture, yFuture] = predictPathRANSAC(v_whole, box_x);
 
 %% edge detection
-pixels = object_pixels(fileName,frame_for_canny_start,frame_for_canny_end);
+[pixelBinary, pixels] = object_pixels(fileName,frame_for_canny_start,frame_for_canny_end);
 
 %% Prediction
 figure(6);
@@ -317,9 +317,29 @@ title('final object track result and prediction trajctory');
 % fr=read(source,1);
 % image(fr);
 hold on;
-for i=1:fix(size(xFuture,2)/5) %every 5 frame
-image([xFuture(5*i),xFuture(5*i)+size(pixels,1)],[yFuture(5*i),yFuture(5*i)+size(pixels,2)],pixels,'CDataMapping', 'scaled');
-hold on;
+prediction_Im = Im; % Image on which we place the prediction object locations
+for i=1:fix(size(xFuture,2)/5) % every 5 frames
+    max_y = yFuture(5*i)+size(pixels,1)-1;
+    max_x = xFuture(5*i)+size(pixels,2)-1;
+    % If the predicted object location is outside of the image, stop
+    if (max_y > height || max_x > width)
+        break
+    end
+
+    % The following code takes the object and places it on the image, while
+    % using a mask to ensure only the object pixels are placed on the image
+
+    % Background image where the object will be placed
+    bg_image = prediction_Im(yFuture(5*i):max_y,xFuture(5*i):max_x,:);
+    % Get the pixel binary in 3D (to indicate whether the pixel in the 
+    % rectangle is the object or not)
+    pixelBinary_3D = reshape([pixelBinary,pixelBinary,pixelBinary],[size(pixels,1), size(pixels,2), 3]);
+    % Using pixelBinary_3D as a mask, place the object onto the background
+    combined = pixels.*uint8(pixelBinary_3D) + bg_image.*uint8(~pixelBinary_3D); 
+    % Insert this rectangle back into the full image
+    prediction_Im(yFuture(5*i):yFuture(5*i)+size(pixels,1)-1,xFuture(5*i):xFuture(5*i)+size(pixels,2)-1,:) = combined;
+
 end
+imshow(prediction_Im)
 
 
