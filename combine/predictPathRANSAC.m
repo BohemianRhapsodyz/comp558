@@ -16,7 +16,7 @@ function [xFuture, yFuture] = predictPathRANSAC(v_whole, box_x)
     % dist_between_pts that 
     dist_between_pts = (last_x-first_x)/size(x,1);
     
-    %total_number of points that will be generated
+    % horizontal distance assumed to be constant from physics (assume minimal air resistance)
     xFuture=((last_x+dist_between_pts):(dist_between_pts):(last_x+dist_between_pts*size(x,1)));
     yFuture = polyval(P,xFuture);
     

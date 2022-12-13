@@ -1,0 +1,69 @@
+function [futureAvi] = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBinary, pixels)
+    source=VideoReader(fileName);
+    height=source.H;
+    width=source.W;
+    % create a working directory to store all the future image frames
+    workingDir = 'tempImageFrames';
+    mkdir(workingDir);
+    mkdir(workingDir,'images');
+    
+    % generate each frame by "pasting" the images onto the background image
+    for i=1:size(xFuture,2)% every frame
+        max_y = fix(yFuture(i)+size(pixels,1)-1);
+        max_x = fix(xFuture(i)+size(pixels,2)-1);
+        % If the predicted object location is outside of the image, stop
+        if (max_y > height || max_x > width)
+            break
+        end
+       
+        % initialize the background image back to the empty one
+        staticBackground = backGrnd;
+    
+        % Background image where the object will be placed
+        bg_image = staticBackground(fix(yFuture(i)):max_y,fix(xFuture(i)):max_x,:);
+        % Get the pixel binary in 3D (to indicate whether the pixel in the 
+        % rectangle is the object or not)
+        pixelBinary_3D = reshape([pixelBinary,pixelBinary,pixelBinary],[size(pixels,1), size(pixels,2), 3]);
+        % Using pixelBinary_3D as a mask, place the object onto the background
+        combined = pixels.*uint8(pixelBinary_3D) + bg_image.*uint8(~pixelBinary_3D); 
+        % Insert this rectangle back into the full image
+        staticBackground(fix(yFuture(i)):max_y,fix(xFuture(i)):max_x,:) = combined;
+    
+        % save the pasted image frame
+        img = staticBackground;
+        filename = [sprintf('%03d',i) '.jpg'];
+        fullname = fullfile(workingDir,'images',filename);
+        imwrite(img,fullname)    % Write out to a JPEG file (img1.jpg, img2.jpg, etc.)
+    end
+    
+    % read the images frame by frame, write to the video file
+    imageNames = dir(fullfile(workingDir,'images','*.jpg'));
+    imageNames = {imageNames.name}';
+    
+    % use regular expression to define a new video name
+    outputName = strcat(regexprep(regexprep(fileName,'.mp4','','ignorecase'), 'Videos/',''), '_future.avi');
+    outputVideo = VideoWriter(fullfile(workingDir, outputName));
+    outputVideo.FrameRate = source.FrameRate;
+    open(outputVideo)
+    for ii = 1:length(imageNames)
+       img = imread(fullfile(workingDir,'images',imageNames{ii}));
+       writeVideo(outputVideo,img)
+    end
+    close(outputVideo)
+    
+    % play the output video
+    futureAvi = VideoReader(fullfile(workingDir, outputName));
+    ii = 1;
+    while hasFrame(futureAvi)
+       mov(ii) = im2frame(readFrame(futureAvi));
+       ii = ii+1;
+    end
+    
+    figure;
+    imshow(mov(1).cdata, 'Border', 'tight');
+    %vidName = regexprep(fileName, 'Videos/','');
+    %figName = strcat('Video Prediction Result:', vidName);
+    %title(figName);
+    movie(mov,1,futureAvi.FrameRate);
+end
+

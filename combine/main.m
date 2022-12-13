@@ -311,7 +311,7 @@ end
 %% edge detection
 [pixelBinary, pixels] = object_pixels(fileName,frame_for_canny_start,frame_for_canny_end);
 
-%% Prediction
+%% Prediction showing the future trace on image
 figure(6);
 title('final object track result and prediction trajctory');
 % fr=read(source,1);
@@ -340,4 +340,33 @@ for i=1:fix(size(xFuture,2)/5) % every 5 frames
     prediction_Im(yFuture(5*i):yFuture(5*i)+size(pixels,1)-1,xFuture(5*i):xFuture(5*i)+size(pixels,2)-1,:) = combined;
 
 end
-imshow(prediction_Im)
+imshow(prediction_Im);
+
+
+%% Generating the final video
+
+% exact background image
+source=VideoReader(fileName);
+%{
+subplot(221); imshow(uint8(getBackGrnd(fileName, 10, 'mean')));
+subplot(222); imshow(uint8(getBackGrnd(fileName, 10, 'median')));
+subplot(223); imshow(uint8(getBackGrnd(fileName, 50, 'mean')));
+subplot(224); imshow(uint8(getBackGrnd(fileName, 50, 'median')));
+%}
+
+figure;
+% no need to use the entire clip, but a few frames, 
+% due to stationary camera
+backGrnd = uint8(getBackGrnd(fileName, end_frame/10, 'median'));
+imshow(backGrnd);
+title("Extracted background image using a median filter");
+
+% output the future video, until the output has the same length as the input video, or the
+% object exits the frame
+futureAvi = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBinary, pixels);
+
+%% Combine predicted video with the original
+
+
+
+
