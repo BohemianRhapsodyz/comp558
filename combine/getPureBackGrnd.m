@@ -1,4 +1,4 @@
-function backGrnd = getBackGrnd(filename, nTest, method)
+function backGrnd = getPureBackGrnd(filename, nTest, method)
     % this exact background image using mean or median filter
     % tic
     if nargin < 2, nTest = 20; end

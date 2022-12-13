@@ -344,9 +344,7 @@ end
 imshow(prediction_Im);
 
 
-%% Generating the final video
-
-% exact background image
+%% exact background image
 source=VideoReader(fileName);
 %{
 subplot(221); imshow(uint8(getBackGrnd(fileName, 10, 'mean')));
@@ -355,13 +353,36 @@ subplot(223); imshow(uint8(getBackGrnd(fileName, 50, 'mean')));
 subplot(224); imshow(uint8(getBackGrnd(fileName, 50, 'median')));
 %}
 
+% STEP 1: get a pure background image
 figure;
 % no need to use the entire clip, but a few frames, 
 % due to stationary camera
-backGrnd = uint8(getBackGrnd(fileName, end_frame/10, 'median'));
+backGrnd = uint8(getPureBackGrnd(fileName, end_frame/10, 'median'));
 imshow(backGrnd);
 title("Extracted background image using a median filter");
 
+
+% STEP 2: for smooth transition
+x=v_whole(:,1);
+y=v_whole(:,2);
+x=flip(x);
+y=flip(y);
+last_Xcenter=fix(x(1));
+last_Ycenter=fix(y(1));
+x_dist=size(pixels,2);
+y_dist=size(pixels,1);
+% for the last frame of the input video, we replace the position with the
+% ball by the background picture
+last_frame_without_obj = read(source,Inf);
+
+%replace the pixels with the earpods with the background
+last_frame_without_obj(last_Ycenter-y_dist*2:last_Ycenter+y_dist*2,last_Xcenter-x_dist*2:last_Xcenter+x_dist*2,:)=backGrnd(last_Ycenter-y_dist*2:last_Ycenter+y_dist*2,last_Xcenter-x_dist*2:last_Xcenter+x_dist*2,:);
+
+figure;
+imshow(last_frame_without_obj);
+title("The Last Video Frame Without the Object");
+
+%% Generating the final video
 % output the future video, until the output has the same length as the input video, or the
 % object exits the frame
 futureAvi = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBinary, pixels);
