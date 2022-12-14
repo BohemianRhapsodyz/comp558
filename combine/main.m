@@ -10,45 +10,49 @@ clc
  end_frame=120;
  frame_for_canny_start=110;
  frame_for_canny_end=115;
+ is_circular = false;
  box_x=20; %interest_region box size
  box_y=20;
 
 
-%{
 % video 2, volleyball bouncing
 
-fileName = 'Videos/vid2_trim.mp4';
-earliest_frame=1;
-start_frame=2;
-end_frame=20;
-frame_for_canny_start=140;
-frame_for_canny_end=145;
-box_x=30; %interest_region box size
-box_y=30;
-
+% fileName = 'Videos/vid2_trim.mp4';
+% earliest_frame=1;
+% start_frame=2;
+% end_frame=20;
+% frame_for_canny_start=1;
+% frame_for_canny_end=20;
+% is_circular = true;
+% box_x=30; %interest_region box size
+% box_y=30;
 
 
 % video 3, clear ball boucing
-fileName = 'Videos/vid3_trim.mp4';
-earliest_frame=1;
-start_frame=100;
-end_frame=161;
-frame_for_canny_start=140;
-frame_for_canny_end=145;
-box_x=90; %interest_region box size
-box_y=90;
 
+% fileName = 'Videos/vid3_trim.mp4';
+% earliest_frame=1;
+% start_frame=100;
+% end_frame=161;
+% frame_for_canny_start=140;
+% frame_for_canny_end=145;
+% is_circular = true; % Note: object detection still doesn't work
+% box_x=90; %interest_region box size
+% box_y=90;
 
+ 
 % video 4, peppa pig
-fileName = 'Videos/vid4.mp4'
-earliest_frame=1;
-start_frame=26;
-end_frame=30;
-frame_for_canny_start=140;
-frame_for_canny_end=145;
-box_x=90; %interest_region box size
-box_y=90;
-%}
+
+% fileName = 'Videos/vid4.mp4'
+% earliest_frame=1;
+% start_frame=26;
+% end_frame=30;
+% frame_for_canny_start=26;
+% frame_for_canny_end=30;
+% is_circular = true;
+% box_x=90; %interest_region box size
+% box_y=90;
+
 
 %% farneback
 % Returns [y coordinate, x coordinate, frame number]
@@ -309,39 +313,7 @@ end
 [xFuture, yFuture] = predictPathRANSAC(v_whole, box_x);
 
 %% edge detection
-[pixelBinary, pixels] = object_pixels(fileName,frame_for_canny_start,frame_for_canny_end);
-
-%% Prediction showing the future trace on image
-figure(6);
-title('final object track result and prediction trajctory');
-% fr=read(source,1);
-% image(fr);
-hold on;
-prediction_Im = Im; % Image on which we place the prediction object locations
-
-for i=1:fix(size(xFuture,2)/5) % every 5 frames
-    max_y = fix(yFuture(5*i)+size(pixels,1)-1);
-    max_x = fix(xFuture(5*i)+size(pixels,2)-1);
-    % If the predicted object location is outside of the image, stop
-    if (max_y > height || max_x > width)
-        break
-    end
-
-    % The following code takes the object and places it on the image, while
-    % using a mask to ensure only the object pixels are placed on the image
-
-    % Background image where the object will be placed
-    bg_image = prediction_Im(fix(yFuture(5*i)):max_y,fix(xFuture(5*i)):max_x,:);
-    % Get the pixel binary in 3D (to indicate whether the pixel in the 
-    % rectangle is the object or not)
-    pixelBinary_3D = reshape([pixelBinary,pixelBinary,pixelBinary],[size(pixels,1), size(pixels,2), 3]);
-    % Using pixelBinary_3D as a mask, place the object onto the background
-    combined = pixels.*uint8(pixelBinary_3D) + bg_image.*uint8(~pixelBinary_3D); 
-    % Insert this rectangle back into the full image
-    prediction_Im(fix(yFuture(5*i)):max_y,fix(xFuture(5*i)):max_x,:) = combined;
-
-end
-imshow(prediction_Im);
+[pixelBinary, pixels] = object_pixels(fileName,frame_for_canny_start,frame_for_canny_end,is_circular);
 
 
 %% exact background image
@@ -373,7 +345,7 @@ x_dist=size(pixels,2);
 y_dist=size(pixels,1);
 % for the last frame of the input video, we replace the position with the
 % ball by the background picture
-last_frame_without_obj = read(source,Inf);
+last_frame_without_obj = read(source,start_frame);
 
 %replace the pixels with the earpods with the background
 last_frame_without_obj(last_Ycenter-y_dist*2:last_Ycenter+y_dist*2,last_Xcenter-x_dist*2:last_Xcenter+x_dist*2,:)=backGrnd(last_Ycenter-y_dist*2:last_Ycenter+y_dist*2,last_Xcenter-x_dist*2:last_Xcenter+x_dist*2,:);
@@ -382,10 +354,46 @@ figure;
 imshow(last_frame_without_obj);
 title("The Last Video Frame Without the Object");
 
+
+%% Prediction showing the future trace on image
+figure(6);
+title('Object Trajectory Prediction');
+% fr=read(source,1);
+% image(fr);
+hold on;
+prediction_Im = last_frame_without_obj; % Image on which we place the prediction object locations
+
+for i=1:fix(size(xFuture,2)/5) % every 5 frames
+    min_y = fix(yFuture(5*i)-size(pixels,1)/2);
+    min_x = fix(xFuture(5*i)-size(pixels,2)/2);
+    max_y = fix(yFuture(5*i)+size(pixels,1)/2-1);
+    max_x = fix(xFuture(5*i)+size(pixels,2)/2-1);
+    % If the predicted object location is outside of the image, stop
+    if (max_y > height || max_x > width)
+        break
+    end
+
+    % The following code takes the object and places it on the image, while
+    % using a mask to ensure only the object pixels are placed on the image
+
+    % Background image where the object will be placed
+    bg_image = prediction_Im(min_y:max_y,min_x:max_x,:);
+    % Get the pixel binary in 3D (to indicate whether the pixel in the 
+    % rectangle is the object or not)
+    pixelBinary_3D = reshape([pixelBinary,pixelBinary,pixelBinary],[size(pixels,1), size(pixels,2), 3]);
+    % Using pixelBinary_3D as a mask, place the object onto the background
+    combined = pixels.*uint8(pixelBinary_3D) + bg_image.*uint8(~pixelBinary_3D); 
+    % Insert this rectangle back into the full image
+    prediction_Im(min_y:max_y,min_x:max_x,:) = combined;
+
+end
+imshow(prediction_Im);
+
+
 %% Generating the final video
 % output the future video, until the output has the same length as the input video, or the
 % object exits the frame
-futureAvi = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBinary, pixels);
+futureAvi = futureSeer(xFuture, yFuture, fileName, last_frame_without_obj, pixelBinary, pixels, start_frame);
 
 %% Combine predicted video with the original
 

@@ -1,4 +1,4 @@
-function [futureAvi] = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBinary, pixels)
+function [futureAvi] = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBinary, pixels, start_frame)
     source=VideoReader(fileName);
     height=source.H;
     width=source.W;
@@ -9,8 +9,10 @@ function [futureAvi] = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBin
     
     % generate each frame by "pasting" the images onto the background image
     for i=1:size(xFuture,2)% every frame
-        max_y = fix(yFuture(i)+size(pixels,1)-1);
-        max_x = fix(xFuture(i)+size(pixels,2)-1);
+        min_y = fix(yFuture(i)-size(pixels,1)/2);
+        min_x = fix(xFuture(i)-size(pixels,2)/2);
+        max_y = fix(yFuture(i)+size(pixels,1)/2-1);
+        max_x = fix(xFuture(i)+size(pixels,2)/2-1);
         % If the predicted object location is outside of the image, stop
         if (max_y > height || max_x > width)
             break
@@ -20,14 +22,14 @@ function [futureAvi] = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBin
         staticBackground = backGrnd;
     
         % Background image where the object will be placed
-        bg_image = staticBackground(fix(yFuture(i)):max_y,fix(xFuture(i)):max_x,:);
+        bg_image = staticBackground(min_y:max_y,min_x:max_x,:);
         % Get the pixel binary in 3D (to indicate whether the pixel in the 
         % rectangle is the object or not)
         pixelBinary_3D = reshape([pixelBinary,pixelBinary,pixelBinary],[size(pixels,1), size(pixels,2), 3]);
         % Using pixelBinary_3D as a mask, place the object onto the background
         combined = pixels.*uint8(pixelBinary_3D) + bg_image.*uint8(~pixelBinary_3D); 
         % Insert this rectangle back into the full image
-        staticBackground(fix(yFuture(i)):max_y,fix(xFuture(i)):max_x,:) = combined;
+        staticBackground(min_y:max_y,min_x:max_x,:) = combined;
     
         % save the pasted image frame
         img = staticBackground;
@@ -45,6 +47,10 @@ function [futureAvi] = futureSeer(xFuture, yFuture, fileName, backGrnd, pixelBin
     outputVideo = VideoWriter(fullfile(workingDir, outputName));
     outputVideo.FrameRate = source.FrameRate;
     open(outputVideo)
+    for ii = 1:start_frame
+       fr = read(source,ii);
+       writeVideo(outputVideo,fr);
+    end
     for ii = 1:length(imageNames)
        img = imread(fullfile(workingDir,'images',imageNames{ii}));
        writeVideo(outputVideo,img)
