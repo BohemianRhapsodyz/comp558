@@ -1,6 +1,7 @@
 function backGrnd = getPureBackGrnd(filename, nTest, method)
     % this exact background image using mean or median filter
-    % tic
+
+    % if only one input OR 2 inputs, assign default values.
     if nargin < 2, nTest = 20; end
     if nargin < 3, method = 'median'; end
     v = VideoReader(filename);
@@ -14,7 +15,7 @@ function backGrnd = getPureBackGrnd(filename, nTest, method)
         buff(:, :, :, mod(fi, nTest) + 1) = readFrame(v);
     end
 
-    % if fi < B (i.e., you processed less than B frames) 
+    % if fi < nTest (i.e., you processed less than nTest frames) 
     % the background model is not stable.
     % I am using NaNs as default values for the buffer and these values are ignored when background model is estimated 
     % --> this is the reason why I use nanmedian and nanmean instead of simply median and mean
@@ -24,5 +25,4 @@ function backGrnd = getPureBackGrnd(filename, nTest, method)
         case 'mean'
             backGrnd = nanmean(buff, 4);
     end
-    % toc
 end
