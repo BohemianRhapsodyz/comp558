@@ -318,12 +318,19 @@ end
 
 %% exact background image
 source=VideoReader(fileName);
+
 %{
-subplot(221); imshow(uint8(getBackGrnd(fileName, 10, 'mean')));
-subplot(222); imshow(uint8(getBackGrnd(fileName, 10, 'median')));
-subplot(223); imshow(uint8(getBackGrnd(fileName, 50, 'mean')));
-subplot(224); imshow(uint8(getBackGrnd(fileName, 50, 'median')));
-%}
+figure;
+subplot(221); imshow(uint8(getPureBackGrnd(fileName, 20, 'mean')));
+title('20 frames, method="mean"');
+subplot(222); imshow(uint8(getPureBackGrnd(fileName, 20, 'median')));
+title('20 frames, method="median"');
+subplot(223); imshow(uint8(getPureBackGrnd(fileName, 50, 'mean')));
+title('50 frames, method="mean"');
+subplot(224); imshow(uint8(getPureBackGrnd(fileName, 50, 'median')));
+title('50 frames, method="median"');
+%} 
+
 
 % STEP 1: get a pure background image
 figure;
